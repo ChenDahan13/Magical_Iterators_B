@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <iterator>
+#include <algorithm>
 
 using namespace std;
 
@@ -11,14 +12,16 @@ namespace ariel {
     class MagicalContainer {
 
         vector<int> originalContainer;
-        vector<int> ascendingContainer;
-        vector<int> primeContainer; 
-        vector<int> sideCrossContainer;
+        vector<int*> ascendingContainer;
+        vector<int*> primeContainer; 
+        vector<int*> sideCrossContainer;
 
-        void addAscending(int element);
+        void updateAscending();
         void updateSideCross();
+        void updatePrime();
         void deleteElement(vector<int>& container, int element);
         void copyContainer(vector<int>& container, vector<int>& other);
+        void copyContainerPointers(vector<int*>& container, vector<int*>& other);
 
         public:  
             
@@ -43,7 +46,7 @@ namespace ariel {
    
         class AscendingIterator {
                 MagicalContainer* container;
-                vector<int>::iterator ptr;
+                vector<int*>::iterator ptr;
             
                 public:
                     
@@ -69,7 +72,7 @@ namespace ariel {
 
         class SideCrossIterator {
             MagicalContainer* container;
-            vector<int>::iterator ptr;
+            vector<int*>::iterator ptr;
 
             public:
                 
@@ -95,7 +98,7 @@ namespace ariel {
 
         class PrimeIterator {
             MagicalContainer* container;
-            vector<int>::iterator ptr;
+            vector<int*>::iterator ptr;
             
             public:
                     

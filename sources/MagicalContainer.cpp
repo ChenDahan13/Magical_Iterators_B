@@ -9,30 +9,33 @@ void MagicalContainer::copyContainer(vector<int>& container, vector<int>& other)
     }
 }
 
+void MagicalContainer::copyContainerPointers(vector<int*>& container, vector<int*>& other) {
+    for(std::vector<int*>::size_type i = 0; i < other.size(); i++) {
+        container.push_back(other[i]);
+    }
+}
+
 MagicalContainer::MagicalContainer(MagicalContainer& other) {
     this->copyContainer(this->originalContainer, other.originalContainer);
-    this->copyContainer(this->ascendingContainer, other.ascendingContainer);
-    this->copyContainer(this->primeContainer, other.primeContainer);
-    this->copyContainer(this->sideCrossContainer, other.sideCrossContainer);
+    this->copyContainerPointers(this->ascendingContainer, other.ascendingContainer);
+    this->copyContainerPointers(this->primeContainer, other.primeContainer);
+    this->copyContainerPointers(this->sideCrossContainer, other.sideCrossContainer);
 }
 
 /* MagicalContainer Functions */
-void MagicalContainer::addAscending(int element) {
-    
-    if(this->ascendingContainer.empty()) { // First element
-        this->ascendingContainer.push_back(element);
-    } else {
-        int added = 0, addposition = 0;
-        for(std::vector<int>::size_type i = 0; i < this->ascendingContainer.size(); i++) {
-            if(!added && element < this->ascendingContainer[i]) { // Found place to add
-                this->ascendingContainer.insert(this->ascendingContainer.begin() + addposition, element);
-                added = 1;
-            }
-            addposition++;
-        }
+void MagicalContainer::updateAscending() {
+    this->ascendingContainer.clear();
+    for(std::vector<int>::size_type i = 0; i < this->originalContainer.size(); i++) {
+        this->ascendingContainer.push_back(&this->originalContainer[i]);
+    }
+    sort(this->ascendingContainer.begin(), this->ascendingContainer.end(), [](int* a, int* b) { return *a < *b; });
+}
 
-        if(!added) { // Adds to the end
-            this->ascendingContainer.push_back(element);
+void MagicalContainer::updatePrime() {
+    this->primeContainer.clear();
+    for(std::vector<int>::size_type i = 0; i < this->originalContainer.size(); i++) {
+        if(isPrime(this->originalContainer[i])) {
+            this->primeContainer.push_back(&this->originalContainer[i]);
         }
     }
 }
@@ -44,9 +47,9 @@ MagicalContainer& MagicalContainer::operator=(MagicalContainer& other) {
         this->primeContainer.clear();
         this->sideCrossContainer.clear();
         this->copyContainer(this->originalContainer, other.originalContainer);
-        this->copyContainer(this->ascendingContainer, other.ascendingContainer);
-        this->copyContainer(this->primeContainer, other.primeContainer);
-        this->copyContainer(this->sideCrossContainer, other.sideCrossContainer);
+        this->copyContainerPointers(this->ascendingContainer, other.ascendingContainer);
+        this->copyContainerPointers(this->primeContainer, other.primeContainer);
+        this->copyContainerPointers(this->sideCrossContainer, other.sideCrossContainer);
     }
     return *this;
 }
@@ -62,10 +65,10 @@ void MagicalContainer::updateSideCross() {
 
     for(int i = 0; i < this->originalContainer.size(); i++) {
         if(addStart) { 
-            this->sideCrossContainer.push_back(*start);
+            this->sideCrossContainer.push_back(&(*start));
             start++;
         } else { 
-            this->sideCrossContainer.push_back(*end);
+            this->sideCrossContainer.push_back(&(*end));
             end--;
         }
         addStart = !addStart;
@@ -75,13 +78,8 @@ void MagicalContainer::updateSideCross() {
 void MagicalContainer::addElement(int element) {
     
     this->originalContainer.push_back(element);
-    
-    if(isPrime(element)) { // Add to primeContainer
-        printf("Adding %d to primeContainer\n", element);
-        this->primeContainer.push_back(element);
-    }
-
-    this->addAscending(element); // Add to ascendingContainer
+    this->updateAscending(); // Update ascendingContainer
+    this->updatePrime(); // Update primeContainer
     this->updateSideCross(); // Update sideCrossContainer
 }
 
@@ -119,10 +117,9 @@ void MagicalContainer::deleteElement(vector<int>& container, int element) {
 
 void MagicalContainer::removeElement(int element) {
     this->deleteElement(this->originalContainer, element);
-    this->deleteElement(this->ascendingContainer, element);
-    if(isPrime(element))
-        this->deleteElement(this->primeContainer, element);
-    this->deleteElement(this->sideCrossContainer, element);
+    this->updateAscending(); // Update ascendingContainer
+    this->updatePrime(); // Update primeContainer
+    this->updateSideCross(); // Update sideCrossContainer
 }
 /* -------------------------- */
 
@@ -216,7 +213,7 @@ int MagicalContainer::AscendingIterator::operator*() const {
    if(this->ptr == this->container->ascendingContainer.end()) {
         throw runtime_error("Iterator is at the end of the container");
     }
-    return *this->ptr;
+    return **this->ptr;
 }
 
 MagicalContainer::AscendingIterator MagicalContainer::AscendingIterator::begin() {
@@ -311,7 +308,7 @@ int MagicalContainer::SideCrossIterator::operator*() const {
     if(this->ptr == this->container->sideCrossContainer.end()) {
         throw runtime_error("Iterator is at the end of the container");
     }
-    return *this->ptr;
+    return **this->ptr;
 }
 
 MagicalContainer::SideCrossIterator MagicalContainer::SideCrossIterator::begin() {
@@ -407,7 +404,7 @@ int MagicalContainer::PrimeIterator::operator*() const {
     if(this->ptr == this->container->primeContainer.end()) {
         throw runtime_error("Iterator is at the end of the container");
     }
-    return *this->ptr;
+    return **this->ptr;
 }
 
 MagicalContainer::PrimeIterator MagicalContainer::PrimeIterator::begin() {
